@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App</title>
+    <style>
+        /* Add your CSS styling here */
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>To-Do List</h1>
+        <input type="text" id="task-input" placeholder="Add a task" />
+        <button id="add-task-btn">Add Task</button>
+        <ul id="task-list"></ul>
+    </div>
+
+    <script>
+        // Fetch tasks from the backend
+        const fetchTasks = async () => {
+            const response = await fetch('/api/tasks');
+            const tasks = await response.json();
+            document.getElementById('task-list').innerHTML = tasks.map(task => 
+                `<li>
+                    ${task.title} 
+                    <button onclick="deleteTask('${task._id}')">Delete</button>
+                    <button onclick="toggleComplete('${task._id}', ${task.completed})">
+                        ${task.completed ? 'Unmark' : 'Complete'}
+                    </button>
+                </li>`
+            ).join('');
+        };
+
+        // Add a new task
+        document.getElementById('add-task-btn').addEventListener('click', async () => {
+            const title = document.getElementById('task-input').value;
+            await fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title })
+            });
+            fetchTasks();
+        });
+
+        // Delete a task
+        const deleteTask = async (id) => {
+            await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+            fetchTasks();
+        };
+
+        // Toggle task completion
+        const toggleComplete = async (id, completed) => {
+            await fetch(`/api/tasks/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ completed: !completed })
+            });
+            fetchTasks();
+        };
+
+        // Load tasks when the page loads
+        window.onload = fetchTasks;
+    </script>
+</body>
+</html>
